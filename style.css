@@ -1,0 +1,36 @@
+html, body {
+  margin: 0;
+  padding: 0;
+}
+canvas {
+  display: block;
+}
+
+.square {
+  width: 100px;
+  height: 100px;
+  background-color: blue;
+  transition: background-color 0.5s, transform 0.5s;  /* what you want to transition and the duration */
+  animation: rotation 5s linear infinite;
+}
+
+.square:hover {
+  background-color: red;
+  transform: rotate(360deg);
+}
+
+.container {
+  display: flex;
+  gap: 20px; /* space between squares */
+  padding: 20px;
+  flex-wrap: wrap; /* this allows squares to wrap to the next line if needed */
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
