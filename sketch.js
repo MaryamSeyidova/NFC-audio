@@ -37,16 +37,34 @@ function setup() {
     });
   }
 
-  pointerX = mouseX;
-  pointerY = mouseY;
+  pointerX = width / 2;
+  pointerY = height / 2;
   pmx = pointerX;
   pmy = pointerY;
+
+  if (canvas && canvas.elt) {
+    canvas.elt.style.touchAction = "none";
+
+    const updateFromPointerEvent = (event) => {
+      const rect = canvas.elt.getBoundingClientRect();
+      const x = map(event.clientX, rect.left, rect.right, 0, width);
+      const y = map(event.clientY, rect.top, rect.bottom, 0, height);
+      updatePointerState(x, y);
+      if (event.pointerType === "touch" || event.pointerType === "pen") {
+        enableSound();
+      }
+    };
+
+    canvas.elt.addEventListener("pointerdown", updateFromPointerEvent);
+    canvas.elt.addEventListener("pointermove", updateFromPointerEvent);
+    canvas.elt.addEventListener("pointerup", updateFromPointerEvent);
+  }
 
   // optional instruction
   fill(255);
   textAlign(CENTER, CENTER);
   textSize(24);
-  text("Click anywhere to enable sound", width / 2, height / 2);
+  text("Tap or click anywhere to enable sound", width / 2, height / 2);
 }
 
 function draw() {
@@ -144,16 +162,16 @@ function updatePointerState(x, y) {
   let prevX = pointerX;
   let prevY = pointerY;
 
-  pointerX = x;
-  pointerY = y;
+  pointerX = constrain(x, 0, width);
+  pointerY = constrain(y, 0, height);
 
   pmx = prevX;
   pmy = prevY;
 
   pmouseX = prevX;
   pmouseY = prevY;
-  mouseX = x;
-  mouseY = y;
+  mouseX = pointerX;
+  mouseY = pointerY;
 
   lastMouseSpeed = dist(pointerX, pointerY, prevX, prevY);
 }
@@ -162,19 +180,29 @@ function mouseMoved() {
   updatePointerState(mouseX, mouseY);
 }
 
+function mouseDragged() {
+  updatePointerState(mouseX, mouseY);
+}
+
 function touchStarted() {
-  updatePointerState(touchX, touchY);
+  if (touches.length > 0) {
+    updatePointerState(touches[0].x, touches[0].y);
+  }
   enableSound();
   return false;
 }
 
 function touchMoved() {
-  updatePointerState(touchX, touchY);
+  if (touches.length > 0) {
+    updatePointerState(touches[0].x, touches[0].y);
+  }
   return false;
 }
 
 function touchEnded() {
-  updatePointerState(touchX, touchY);
+  if (touches.length > 0) {
+    updatePointerState(touches[0].x, touches[0].y);
+  }
   return false;
 }
 
@@ -265,7 +293,7 @@ function enableSound() {
   soundStarted = true;
 }
 
-// 🎵 SOUND: unlock audio on first click
+// 🎵 SOUND: unlock audio on first click/tap
 function mousePressed() {
   enableSound();
 }
