@@ -44,12 +44,14 @@ function setup() {
 
   if (canvas && canvas.elt) {
     canvas.elt.style.touchAction = "none";
+    canvas.elt.style.userSelect = "none";
 
     const updateFromPointerEvent = (event) => {
       const rect = canvas.elt.getBoundingClientRect();
       const x = map(event.clientX, rect.left, rect.right, 0, width);
       const y = map(event.clientY, rect.top, rect.bottom, 0, height);
       updatePointerState(x, y);
+
       if (event.pointerType === "touch" || event.pointerType === "pen") {
         enableSound();
       }
@@ -58,6 +60,8 @@ function setup() {
     canvas.elt.addEventListener("pointerdown", updateFromPointerEvent);
     canvas.elt.addEventListener("pointermove", updateFromPointerEvent);
     canvas.elt.addEventListener("pointerup", updateFromPointerEvent);
+    canvas.elt.addEventListener("pointerleave", updateFromPointerEvent);
+    canvas.elt.addEventListener("pointercancel", updateFromPointerEvent);
   }
 
   // optional instruction
@@ -195,6 +199,7 @@ function touchStarted() {
 function touchMoved() {
   if (touches.length > 0) {
     updatePointerState(touches[0].x, touches[0].y);
+    enableSound();
   }
   return false;
 }
