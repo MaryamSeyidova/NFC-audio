@@ -291,9 +291,31 @@ function enableSound() {
   osc.start();
   osc.amp(0);
   soundStarted = true;
+
+  const unlockButton = document.getElementById("audio-unlock");
+  if (unlockButton) {
+    unlockButton.style.display = "none";
+  }
 }
 
 // 🎵 SOUND: unlock audio on first click/tap
 function mousePressed() {
+  if (window.matchMedia("(pointer: coarse)").matches) {
+    return;
+  }
   enableSound();
 }
+
+window.addEventListener("DOMContentLoaded", () => {
+  const unlockButton = document.getElementById("audio-unlock");
+  if (!unlockButton) return;
+
+  if (!window.matchMedia("(pointer: coarse)").matches) {
+    unlockButton.style.display = "none";
+    return;
+  }
+
+  unlockButton.addEventListener("pointerdown", () => {
+    enableSound();
+  });
+});
