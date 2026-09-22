@@ -4,6 +4,8 @@ let t = 0;
 
 let pmx = 0;
 let pmy = 0;
+let pointerX = 0;
+let pointerY = 0;
 
 // ===== p5.sound oscillator =====
 let osc;  
@@ -35,8 +37,10 @@ function setup() {
     });
   }
 
-  pmx = mouseX;
-  pmy = mouseY;
+  pointerX = mouseX;
+  pointerY = mouseY;
+  pmx = pointerX;
+  pmy = pointerY;
 
   // optional instruction
   fill(255);
@@ -50,10 +54,10 @@ function draw() {
   fill(35, 0, 0); // color bg
   rect(0, 0, width, height);
 
-  let flowScale = map(mouseY, 0, height, 0.0006, 0.004);
-  let chaos = map(mouseX, 0, width, 0.8, 3.2);
+  let flowScale = map(pointerY, 0, height, 0.0006, 0.004);
+  let chaos = map(pointerX, 0, width, 0.8, 3.2);
 
-  let mouseSpeed = dist(mouseX, mouseY, pmx, pmy);
+  let mouseSpeed = dist(pointerX, pointerY, pmx, pmy);
   let thickness = constrain(mouseSpeed * 0.05, 0.5, 2.5);
 
   stroke(255, 70);
@@ -68,8 +72,8 @@ function draw() {
     let fx = cos(angle);
     let fy = sin(angle);
 
-    let dx = mouseX - p.x;
-    let dy = mouseY - p.y;
+    let dx = pointerX - p.x;
+    let dy = pointerY - p.y;
     let d = sqrt(dx * dx + dy * dy) + 0.001;
 
     if (d < 200) {
@@ -117,8 +121,8 @@ function draw() {
     }
   }
 
-  pmx = mouseX;
-  pmy = mouseY;
+  pmx = pointerX;
+  pmy = pointerY;
   t += 0.003;
 
   // handle generative sound
@@ -136,8 +140,42 @@ function windowResized() {
 let lastMouseSpeed = 0;
 let centerAlpha = 0;
 
+function updatePointerState(x, y) {
+  let prevX = pointerX;
+  let prevY = pointerY;
+
+  pointerX = x;
+  pointerY = y;
+
+  pmx = prevX;
+  pmy = prevY;
+
+  pmouseX = prevX;
+  pmouseY = prevY;
+  mouseX = x;
+  mouseY = y;
+
+  lastMouseSpeed = dist(pointerX, pointerY, prevX, prevY);
+}
+
 function mouseMoved() {
-  lastMouseSpeed = dist(mouseX, mouseY, pmouseX, pmouseY);
+  updatePointerState(mouseX, mouseY);
+}
+
+function touchStarted() {
+  updatePointerState(touchX, touchY);
+  enableSound();
+  return false;
+}
+
+function touchMoved() {
+  updatePointerState(touchX, touchY);
+  return false;
+}
+
+function touchEnded() {
+  updatePointerState(touchX, touchY);
+  return false;
 }
 
 p5.prototype.registerMethod("post", () => {
@@ -155,11 +193,11 @@ p5.prototype.registerMethod("post", () => {
   translate(width / 2, height / 2);
 
   // vertical movement → size
-  let dy = mouseY - pmouseY;
+  let dy = pointerY - pmy;
   let baseSize = map(abs(dy), 0, 50, 60, 260, true);
 
   // horizontal movement → color
-  let dx = mouseX - pmouseX;
+  let dx = pointerX - pmx;
   let palette = [
     color(0, 120, 255),    // bright blue
     color(255, 255, 255),  // white
@@ -200,13 +238,13 @@ function handleSound() {
   let vol = map(speed, 0, 40, 0, 0.06, true);
 
   // vertical movement → lower, warmer frequency range
-  let freq = map(mouseY, 0, height, 240, 80);
+  let freq = map(pointerY, 0, height, 240, 80);
 
   // horizontal movement → panning
-  let pan = map(mouseX, 0, width, -1, 1);
+  let pan = map(pointerX, 0, width, -1, 1);
 
   // warm the tone by rolling off higher frequencies
-  filter.freq(map(mouseY, 0, height, 1200, 350));
+  filter.freq(map(pointerY, 0, height, 1200, 350));
   filter.res(0.35);
 
   if (speed > 0.10) {
@@ -218,12 +256,16 @@ function handleSound() {
   }
 }
 
+function enableSound() {
+  if (soundStarted) return;
+
+  userStartAudio();
+  osc.start();
+  osc.amp(0);
+  soundStarted = true;
+}
+
 // 🎵 SOUND: unlock audio on first click
 function mousePressed() {
-  if (!soundStarted) {
-    userStartAudio(); // unlock audio in browser
-    osc.start();      // start oscillator
-    osc.amp(0);       // start silent
-    soundStarted = true;
-  }
+  enableSound();
 }
